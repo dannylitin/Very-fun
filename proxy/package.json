@@ -1,0 +1,20 @@
+{
+  "name": "pt-font-proxy",
+  "version": "1.0.0",
+  "description": "Public Type font-preview proxy server — strips iframe-blocking headers and injects font-switching runtime.",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsdom": "^24.1.0",
+    "node-fetch": "^2.7.0"
+  },
+  "license": "MIT"
+}

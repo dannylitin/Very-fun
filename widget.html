@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Public Type — Font Preview</title>
+
+  <!-- Google Fonts for UI font previews -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400&family=Fraunces:ital,opsz,wght@0,9..144,100;0,9..144,400;0,9..144,700;1,9..144,400&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Reset & Base ──────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0d0d0d;
+      --surface:      #161616;
+      --surface-2:    #1e1e1e;
+      --border:       #2a2a2a;
+      --border-hover: #3d3d3d;
+      --accent:       #f0ede8;
+      --accent-dim:   #8a857e;
+      --highlight:    #e8e0d4;
+      --active:       #c8b89a;
+      --active-bg:    #1f1b16;
+      --sidebar-w:    280px;
+      --header-h:     60px;
+      --radius:       8px;
+      --font-ui:      'Inter', -apple-system, sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--accent);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Layout Shell ──────────────────────────────────── */
+    #app {
+      display: grid;
+      grid-template-rows: var(--header-h) 1fr;
+      grid-template-columns: 1fr var(--sidebar-w);
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    /* ── Header ────────────────────────────────────────── */
+    #header {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .logo span {
+      color: var(--active);
+    }
+
+    .url-form {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0 4px 0 14px;
+      transition: border-color 0.15s;
+      max-width: 600px;
+    }
+
+    .url-form:focus-within {
+      border-color: var(--border-hover);
+    }
+
+    #url-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      padding: 9px 0;
+      min-width: 0;
+    }
+
+    #url-input::placeholder {
+      color: var(--accent-dim);
+    }
+
+    #url-submit {
+      background: var(--active);
+      color: #0d0d0d;
+      border: none;
+      border-radius: 5px;
+      padding: 6px 16px;
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    #url-submit:hover { opacity: 0.85; }
+    #url-submit:active { opacity: 0.7; }
+
+    .viewport-toggles {
+      display: flex;
+      gap: 2px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 3px;
+      flex-shrink: 0;
+    }
+
+    .vp-btn {
+      background: transparent;
+      border: none;
+      color: var(--accent-dim);
+      cursor: pointer;
+      padding: 5px 8px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .vp-btn:hover { color: var(--accent); }
+    .vp-btn.active {
+      background: var(--surface);
+      color: var(--accent);
+    }
+
+    .vp-btn svg {
+      display: block;
+    }
+
+    /* ── Preview Area ───────────────────────────────────── */
+    #preview-area {
+      grid-column: 1;
+      grid-row: 2;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+      position: relative;
+    }
+
+    #url-display {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--accent-dim);
+    }
+
+    #url-display.visible { display: flex; }
+
+    .url-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4caf7a;
+      flex-shrink: 0;
+    }
+
+    #url-display span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .before-badge {
+      margin-left: auto;
+      background: #3d2a1a;
+      color: #e09060;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 3px;
+      display: none;
+    }
+
+    .before-badge.visible { display: block; }
+
+    #iframe-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      overflow: auto;
+      padding: 0;
+      position: relative;
+    }
+
+    #site-frame {
+      border: none;
+      display: block;
+      background: #fff;
+      width: 100%;
+      height: 100%;
+      transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ── Empty State ────────────────────────────────────── */
+    #empty-state {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      color: var(--accent-dim);
+      pointer-events: none;
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      opacity: 0.2;
+    }
+
+    .empty-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--accent);
+      opacity: 0.4;
+    }
+
+    .empty-sub {
+      font-size: 13px;
+      opacity: 0.5;
+      text-align: center;
+      max-width: 280px;
+      line-height: 1.6;
+    }
+
+    #empty-state.hidden { display: none; }
+
+    /* ── Loading State ───────────────────────────────────── */
+    #loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 5;
+    }
+
+    #loading-overlay.visible { display: flex; }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--border);
+      border-top-color: var(--active);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text {
+      font-size: 13px;
+      color: var(--accent-dim);
+    }
+
+    /* ── Sidebar ────────────────────────────────────────── */
+    #sidebar {
+      grid-column: 2;
+      grid-row: 2;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-section {
+      padding: 20px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-section:last-child {
+      border-bottom: none;
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-dim);
+      margin-bottom: 14px;
+    }
+
+    /* ── Font List ──────────────────────────────────────── */
+    #font-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .font-card {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      background: transparent;
+      text-align: left;
+      width: 100%;
+    }
+
+    .font-card:hover {
+      background: var(--surface-2);
+      border-color: var(--border);
+    }
+
+    .font-card.active {
+      background: var(--active-bg);
+      border-color: var(--active);
+    }
+
+    .font-card-name {
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--accent);
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+    }
+
+    .font-card-meta {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent-dim);
+      font-family: var(--font-ui);
+    }
+
+    /* Font-specific typefaces for the card names */
+    .font-card[data-font="Space Grotesk"] .font-card-name { font-family: 'Space Grotesk', sans-serif; }
+    .font-card[data-font="Inter"] .font-card-name { font-family: 'Inter', sans-serif; }
+    .font-card[data-font="Playfair Display"] .font-card-name { font-family: 'Playfair Display', serif; }
+    .font-card[data-font="Fraunces"] .font-card-name { font-family: 'Fraunces', serif; }
+    .font-card[data-font="JetBrains Mono"] .font-card-name { font-family: 'JetBrains Mono', monospace; }
+
+    /* ── Target Selector ────────────────────────────────── */
+    .target-options {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .target-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: background 0.1s;
+    }
+
+    .target-option:hover { background: var(--surface-2); }
+
+    .target-option input[type="radio"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid var(--border-hover);
+      border-radius: 50%;
+      cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+      transition: border-color 0.15s;
+    }
+
+    .target-option input[type="radio"]:checked {
+      border-color: var(--active);
+    }
+
+    .target-option input[type="radio"]:checked::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--active);
+    }
+
+    .target-label {
+      font-size: 13px;
+      color: var(--accent);
+    }
+
+    .target-sub {
+      font-size: 11px;
+      color: var(--accent-dim);
+      margin-left: auto;
+    }
+
+    /* ── Controls ────────────────────────────────────────── */
+    .controls-section {
+      padding: 16px 18px;
+      margin-top: auto;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: var(--radius);
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      border: 1px solid var(--border);
+      letter-spacing: 0.02em;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--accent-dim);
+    }
+
+    .btn-ghost:hover {
+      background: var(--surface-2);
+      color: var(--accent);
+      border-color: var(--border-hover);
+    }
+
+    .btn-primary {
+      background: var(--active);
+      color: #0d0d0d;
+      border-color: transparent;
+      font-weight: 600;
+    }
+
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-primary:active { opacity: 0.7; }
+
+    .btn-toggle {
+      background: var(--surface-2);
+      color: var(--accent-dim);
+      border-color: var(--border);
+    }
+
+    .btn-toggle:hover {
+      color: var(--accent);
+      border-color: var(--border-hover);
+    }
+
+    .btn-toggle.before-mode {
+      background: #3d2a1a;
+      color: #e09060;
+      border-color: #6b3a1f;
+    }
+
+    /* ── Font Status Bar ────────────────────────────────── */
+    #font-status {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    #font-status.visible { display: flex; }
+
+    .status-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .status-label {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent-dim);
+    }
+
+    .status-value {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--active);
+    }
+
+    /* ── Sidebar Scroll ──────────────────────────────────── */
+    .sidebar-scroll {
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .sidebar-scroll::-webkit-scrollbar { width: 4px; }
+    .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+    .sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ── CTA ─────────────────────────────────────────────── */
+    .cta-section {
+      padding: 14px 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    .cta-btn {
+      display: block;
+      width: 100%;
+      padding: 11px 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--accent-dim);
+      font-family: var(--font-ui);
+      font-size: 12px;
+      font-weight: 500;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.03em;
+    }
+
+    .cta-btn:hover {
+      background: var(--surface-2);
+      color: var(--accent);
+      border-color: var(--border-hover);
+    }
+
+    .cta-sub {
+      font-size: 10px;
+      color: var(--accent-dim);
+      text-align: center;
+      margin-top: 8px;
+      opacity: 0.6;
+    }
+
+    /* ── Error Toast ─────────────────────────────────────── */
+    #error-toast {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #2a1414;
+      border: 1px solid #5a2020;
+      color: #e08080;
+      padding: 10px 18px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      z-index: 100;
+      white-space: nowrap;
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      pointer-events: none;
+    }
+
+    #error-toast.visible {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 680px) {
+      :root { --sidebar-w: 100%; }
+
+      #app {
+        grid-template-rows: var(--header-h) 1fr auto;
+        grid-template-columns: 1fr;
+      }
+
+      #sidebar {
+        grid-column: 1;
+        grid-row: 3;
+        max-height: 240px;
+        border-left: none;
+        border-top: 1px solid var(--border);
+      }
+
+      .viewport-toggles { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ── Header ──────────────────────────────────────────── -->
+  <header id="header">
+    <div class="logo">Public<span> Type</span></div>
+
+    <form class="url-form" id="url-form" onsubmit="handleSubmit(event)">
+      <input
+        type="text"
+        id="url-input"
+        placeholder="https://yourbrand.com"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button type="submit" id="url-submit">Preview →</button>
+    </form>
+
+    <div class="viewport-toggles" id="viewport-toggles">
+      <button class="vp-btn active" data-vp="desktop" onclick="setViewport('desktop')" title="Desktop">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="2.5" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+          <path d="M5.5 13.5h5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M8 12.5v1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <button class="vp-btn" data-vp="tablet" onclick="setViewport('tablet')" title="Tablet">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="2.5" y="1" width="11" height="14" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+          <circle cx="8" cy="13" r="0.75" fill="currentColor"/>
+        </svg>
+      </button>
+      <button class="vp-btn" data-vp="mobile" onclick="setViewport('mobile')" title="Mobile">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="4" y="1" width="8" height="14" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+          <circle cx="8" cy="13" r="0.7" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Preview Area ─────────────────────────────────────── -->
+  <main id="preview-area">
+    <div id="url-display">
+      <span class="url-dot"></span>
+      <span id="url-display-text">—</span>
+      <span class="before-badge" id="before-badge">Original</span>
+    </div>
+
+    <div id="iframe-wrapper">
+      <iframe
+        id="site-frame"
+        title="Site preview"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock"
+      ></iframe>
+
+      <!-- Empty State -->
+      <div id="empty-state">
+        <svg class="empty-icon" viewBox="0 0 64 64" fill="none">
+          <rect x="4" y="10" width="56" height="40" rx="4" stroke="currentColor" stroke-width="2"/>
+          <path d="M20 54h24M32 50v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M16 26h32M16 32h20M16 38h24" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+        </svg>
+        <div class="empty-title">Enter a URL to preview</div>
+        <div class="empty-sub">Type your website address above to see it rendered with Public Type fonts applied in real time.</div>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Loading preview…</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── Sidebar ────────────────────────────────────────────── -->
+  <aside id="sidebar">
+    <div class="sidebar-scroll">
+
+      <!-- Font Status -->
+      <div id="font-status">
+        <div class="status-row">
+          <span class="status-label">Active font</span>
+          <span class="status-value" id="active-font-name">—</span>
+        </div>
+      </div>
+
+      <!-- Font Family -->
+      <div class="sidebar-section">
+        <div class="section-label">Font Family</div>
+        <div id="font-list">
+          <!-- generated by JS -->
+        </div>
+      </div>
+
+      <!-- Target Selector -->
+      <div class="sidebar-section">
+        <div class="section-label">Apply To</div>
+        <div class="target-options">
+          <label class="target-option">
+            <input type="radio" name="target" value="headings" checked onchange="handleTargetChange(this)" />
+            <span class="target-label">Headings</span>
+            <span class="target-sub">H1–H6</span>
+          </label>
+          <label class="target-option">
+            <input type="radio" name="target" value="body" onchange="handleTargetChange(this)" />
+            <span class="target-label">Body Text</span>
+            <span class="target-sub">p, li, span…</span>
+          </label>
+          <label class="target-option">
+            <input type="radio" name="target" value="all" onchange="handleTargetChange(this)" />
+            <span class="target-label">All Text</span>
+            <span class="target-sub">Everything</span>
+          </label>
+        </div>
+      </div>
+
+    </div><!-- /sidebar-scroll -->
+
+    <!-- Controls pinned to bottom -->
+    <div class="controls-section">
+      <button class="btn btn-toggle" id="before-after-btn" onclick="toggleBeforeAfter()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M1 7h12M9 4l3 3-3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Compare Original
+      </button>
+      <button class="btn btn-ghost" onclick="resetFonts()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 7a5 5 0 1 1 1.5 3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M2 10.5V7h3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Reset to Original
+      </button>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-section">
+      <a href="https://publictype.co/licensing" class="cta-btn" target="_blank">
+        License these fonts →
+      </a>
+      <div class="cta-sub">Get a quote for your brand</div>
+    </div>
+
+  </aside>
+
+</div><!-- /app -->
+
+<!-- Error Toast -->
+<div id="error-toast">⚠ Could not load preview. Try a different URL.</div>
+
+<script>
+  /* ── Config ──────────────────────────────────────────────────── */
+
+  // IMPORTANT: Replace this with your deployed proxy URL before embedding
+  // e.g. "https://pt-font-proxy.vercel.app"
+  const PROXY_BASE_URL = (function() {
+    // Try reading from a script tag attribute or global variable first
+    if (window.PT_PROXY_URL) return window.PT_PROXY_URL.replace(/\/$/, '');
+    // Default fallback — update before deploying
+    return 'https://pt-font-proxy.vercel.app';
+  })();
+
+  const FONTS = [
+    {
+      name: 'Space Grotesk',
+      category: 'Geometric Sans',
+      googleFontFamily: 'Space+Grotesk:wght@400;500;700',
+      cssFamily: "'Space Grotesk', sans-serif",
+    },
+    {
+      name: 'Inter',
+      category: 'Humanist Sans',
+      googleFontFamily: 'Inter:wght@400;500;700',
+      cssFamily: "'Inter', sans-serif",
+    },
+    {
+      name: 'Playfair Display',
+      category: 'Serif',
+      googleFontFamily: 'Playfair+Display:ital,wght@0,400;0,700;1,400',
+      cssFamily: "'Playfair Display', serif",
+    },
+    {
+      name: 'Fraunces',
+      category: 'Display',
+      googleFontFamily: 'Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400',
+      cssFamily: "'Fraunces', serif",
+    },
+    {
+      name: 'JetBrains Mono',
+      category: 'Monospace',
+      googleFontFamily: 'JetBrains+Mono:wght@400;500;700',
+      cssFamily: "'JetBrains Mono', monospace",
+    },
+  ];
+
+  const VIEWPORT_WIDTHS = {
+    desktop: '100%',
+    tablet:  '768px',
+    mobile:  '390px',
+  };
+
+  /* ── State ───────────────────────────────────────────────────── */
+  let state = {
+    url:          null,
+    currentFont:  null,
+    currentTarget:'headings',
+    viewport:     'desktop',
+    isBeforeMode: false,
+    hasLoaded:    false,
+  };
+
+  /* ── DOM refs ────────────────────────────────────────────────── */
+  const frame         = document.getElementById('site-frame');
+  const emptyState    = document.getElementById('empty-state');
+  const loadingOverlay= document.getElementById('loading-overlay');
+  const urlDisplay    = document.getElementById('url-display');
+  const urlDisplayTxt = document.getElementById('url-display-text');
+  const beforeBadge   = document.getElementById('before-badge');
+  const fontStatus    = document.getElementById('font-status');
+  const activeFontName= document.getElementById('active-font-name');
+  const beforeAfterBtn= document.getElementById('before-after-btn');
+  const errorToast    = document.getElementById('error-toast');
+
+  /* ── Build font list ─────────────────────────────────────────── */
+  (function buildFontList() {
+    const list = document.getElementById('font-list');
+    FONTS.forEach(font => {
+      const btn = document.createElement('button');
+      btn.className = 'font-card';
+      btn.dataset.font = font.name;
+      btn.onclick = () => selectFont(font);
+      btn.innerHTML = `
+        <span class="font-card-name">${font.name}</span>
+        <span class="font-card-meta">${font.category}</span>
+      `;
+      list.appendChild(btn);
+    });
+  })();
+
+  /* ── URL Handling ────────────────────────────────────────────── */
+  function normaliseUrl(raw) {
+    raw = raw.trim();
+    if (!raw) return null;
+    if (!/^https?:\/\//i.test(raw)) raw = 'https://' + raw;
+    try {
+      return new URL(raw).href;
+    } catch {
+      return null;
+    }
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    const raw = document.getElementById('url-input').value;
+    const url = normaliseUrl(raw);
+    if (!url) { showError('Please enter a valid URL.'); return; }
+    loadSite(url);
+  }
+
+  function loadSite(url) {
+    state.url = url;
+    state.hasLoaded = false;
+    state.isBeforeMode = false;
+    state.currentFont = null;
+
+    // Reset UI
+    updateBeforeAfterUI();
+    clearFontSelection();
+
+    // Show loading
+    emptyState.classList.add('hidden');
+    loadingOverlay.classList.add('visible');
+    urlDisplay.classList.add('visible');
+    urlDisplayTxt.textContent = url;
+
+    const proxyUrl = `${PROXY_BASE_URL}/proxy?url=${encodeURIComponent(url)}`;
+    frame.onload = onFrameLoaded;
+    frame.onerror = onFrameError;
+    frame.src = proxyUrl;
+  }
+
+  function onFrameLoaded() {
+    loadingOverlay.classList.remove('visible');
+    state.hasLoaded = true;
+
+    // Re-apply font if one was selected
+    if (state.currentFont && !state.isBeforeMode) {
+      applyFontToFrame(state.currentFont, state.currentTarget);
+    }
+  }
+
+  function onFrameError() {
+    loadingOverlay.classList.remove('visible');
+    showError('Could not load the site. The URL may be invalid or blocked.');
+  }
+
+  /* ── Font Selection ──────────────────────────────────────────── */
+  function selectFont(font) {
+    if (state.isBeforeMode) {
+      // Exit before mode when user picks a new font
+      state.isBeforeMode = false;
+      updateBeforeAfterUI();
+    }
+
+    state.currentFont = font;
+
+    // Update card UI
+    document.querySelectorAll('.font-card').forEach(c => c.classList.remove('active'));
+    const card = document.querySelector(`.font-card[data-font="${font.name}"]`);
+    if (card) card.classList.add('active');
+
+    // Update status
+    fontStatus.classList.add('visible');
+    activeFontName.textContent = font.name;
+    activeFontName.style.fontFamily = font.cssFamily;
+
+    if (state.hasLoaded) {
+      applyFontToFrame(font, state.currentTarget);
+    }
+  }
+
+  function clearFontSelection() {
+    state.currentFont = null;
+    document.querySelectorAll('.font-card').forEach(c => c.classList.remove('active'));
+    fontStatus.classList.remove('visible');
+  }
+
+  function handleTargetChange(radio) {
+    state.currentTarget = radio.value;
+    if (state.currentFont && state.hasLoaded && !state.isBeforeMode) {
+      applyFontToFrame(state.currentFont, state.currentTarget);
+    }
+  }
+
+  /* ── postMessage to iframe ───────────────────────────────────── */
+  function applyFontToFrame(font, target) {
+    const googleFontUrl = `https://fonts.googleapis.com/css2?family=${font.googleFontFamily}&display=swap`;
+    frame.contentWindow.postMessage({
+      type: 'PT_APPLY_FONT',
+      fontFamily: font.cssFamily,
+      target,
+      googleFontUrl,
+    }, '*');
+  }
+
+  function resetFontInFrame() {
+    frame.contentWindow.postMessage({ type: 'PT_RESET_FONTS' }, '*');
+  }
+
+  /* ── Before / After Toggle ───────────────────────────────────── */
+  function toggleBeforeAfter() {
+    if (!state.hasLoaded) return;
+    state.isBeforeMode = !state.isBeforeMode;
+    updateBeforeAfterUI();
+
+    if (state.isBeforeMode) {
+      resetFontInFrame();
+    } else if (state.currentFont) {
+      applyFontToFrame(state.currentFont, state.currentTarget);
+    }
+  }
+
+  function updateBeforeAfterUI() {
+    if (state.isBeforeMode) {
+      beforeAfterBtn.classList.add('before-mode');
+      beforeAfterBtn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M13 7H1M5 4L2 7l3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Show With Fonts`;
+      beforeBadge.classList.add('visible');
+    } else {
+      beforeAfterBtn.classList.remove('before-mode');
+      beforeAfterBtn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M1 7h12M9 4l3 3-3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Compare Original`;
+      beforeBadge.classList.remove('visible');
+    }
+  }
+
+  /* ── Reset ───────────────────────────────────────────────────── */
+  function resetFonts() {
+    if (!state.hasLoaded) return;
+    state.isBeforeMode = false;
+    clearFontSelection();
+    updateBeforeAfterUI();
+    resetFontInFrame();
+  }
+
+  /* ── Viewport ────────────────────────────────────────────────── */
+  function setViewport(vp) {
+    state.viewport = vp;
+    document.querySelectorAll('.vp-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.vp === vp);
+    });
+    const wrapper = document.getElementById('iframe-wrapper');
+    const w = VIEWPORT_WIDTHS[vp];
+    if (vp === 'desktop') {
+      wrapper.style.justifyContent = 'stretch';
+      frame.style.width = '100%';
+      frame.style.margin = '0';
+    } else {
+      wrapper.style.justifyContent = 'center';
+      frame.style.width = w;
+      frame.style.margin = '0 auto';
+    }
+  }
+
+  /* ── Error Toast ─────────────────────────────────────────────── */
+  let toastTimer;
+  function showError(msg) {
+    errorToast.textContent = msg;
+    errorToast.classList.add('visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => errorToast.classList.remove('visible'), 4000);
+  }
+
+  /* ── Listen for messages from frame (optional debug) ─────────── */
+  window.addEventListener('message', (e) => {
+    if (e.data && e.data.type === 'PT_READY') {
+      // Frame signals it's ready — re-apply font if needed
+      if (state.currentFont && !state.isBeforeMode) {
+        applyFontToFrame(state.currentFont, state.currentTarget);
+      }
+    }
+  });
+
+  // Set initial iframe height to fill the wrapper
+  frame.style.height = '100%';
+</script>
+</body>
+</html>
