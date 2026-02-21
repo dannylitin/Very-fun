@@ -1,5 +1,10 @@
 'use strict';
 
+/* Disable TLS certificate verification — required in Vercel's serverless
+   environment where the system CA bundle is unavailable. This proxy fetches
+   public websites on behalf of the user so strict cert checking is not needed. */
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 /**
  * Public Type — Font Preview Proxy
  *
@@ -10,13 +15,9 @@
 
 const express    = require('express');
 const fetch      = require('node-fetch');
-const https      = require('https');
 const { JSDOM }  = require('jsdom');
 const { URL }    = require('url');
 require('dotenv').config();
-
-/* ── HTTPS agent that skips cert verification (needed in some serverless envs) */
-const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -213,7 +214,6 @@ app.get('/proxy', async (req, res) => {
 
   try {
     const upstream = await fetch(targetUrl, {
-      agent: targetUrl.startsWith('https') ? httpsAgent : undefined,
       headers: {
         'User-Agent':      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
